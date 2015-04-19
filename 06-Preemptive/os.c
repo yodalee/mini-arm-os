@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include "host.h"
 #include "reg.h"
 #include "asm.h"
 
@@ -14,6 +15,8 @@
  * set when that data is transferred to the TDR
  */
 #define USART_FLAG_TXE	((uint16_t) 0x0080)
+
+int handle;
 
 void usart_init(void)
 {
@@ -86,8 +89,13 @@ void task1_func(void)
 	print_str("task1: Created!\n");
 	print_str("task1: Now, return to kernel mode\n");
 	syscall();
+  char msg[] = "task1: Running...\n";
+
 	while (1) {
-		print_str("task1: Running...\n");
+    if (handle != -1) {
+      host_action(SYS_WRITE, handle, msg, strlen(msg));
+    }
+		print_str(msg);
 		delay(1000);
 	}
 }
@@ -97,8 +105,12 @@ void task2_func(void)
 	print_str("task2: Created!\n");
 	print_str("task2: Now, return to kernel mode\n");
 	syscall();
+  char msg[] = "task2: Running...\n";
 	while (1) {
-		print_str("task2: Running...\n");
+    if (handle != -1) {
+      host_action(SYS_WRITE, handle, msg, strlen(msg));
+    }
+		print_str(msg);
 		delay(1000);
 	}
 }
@@ -113,6 +125,15 @@ int main(void)
 	usart_init();
 
 	print_str("OS: Starting...\n");
+
+  host_action(SYS_SYSTEM, "mkdir -p output");
+  host_action(SYS_SYSTEM, "touch output/syslog");
+  handle = host_action(SYS_OPEN, "output/syslog", 4);
+
+  if (handle == -1) {
+    print_str("Open file error!");
+  }
+
 	print_str("OS: First create task 1\n");
 	usertasks[0] = create_task(user_stacks[0], &task1_func);
 	task_count += 1;

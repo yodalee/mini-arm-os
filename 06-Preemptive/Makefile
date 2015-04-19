@@ -18,7 +18,7 @@ qemu: $(TARGET)
 	@qemu-system-arm -M ? | grep stm32-p103 >/dev/null || exit
 	@echo "Press Ctrl-A and then X to exit QEMU"
 	@echo
-	qemu-system-arm -M stm32-p103 -nographic -kernel os.bin
+	qemu-system-arm -M stm32-p103 -nographic -semihosting -kernel os.bin
 
 clean:
 	rm -f *.o *.elf *.bin *.list
